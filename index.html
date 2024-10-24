@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAPI 챗봇</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .chat-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            max-width: 100%;
+            padding: 20px;
+        }
+
+        .chat-box {
+            width: 100%;
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .chat-box p {
+            margin: 0;
+            padding: 5px;
+            border-radius: 5px;
+            background-color: #e1e1e1;
+        }
+
+        .chat-box .user {
+            background-color: #d0f0c0;
+            text-align: right;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-container input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .input-container button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+        }
+
+        .input-container button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-box" id="chat-box"></div>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="질문을 입력하세요">
+            <button onclick="sendMessage()">전송</button>
+        </div>
+    </div>
+
+    <script>
+        async function callOpenAPI(question) {
+            const apiUrl = 'https://api.openai.com/v1/chat/completions';
+            const apiKey = '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'; // 실제 API 키로 교체하세요
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-4", // gpt-4로 수정
+                        messages: [
+                            { role: "system", content: "You are a aggressive assistant." },
+                            { role: "user", content: question }
+                        ],
+                        max_tokens: 150,
+                        temperature: 0.7
+                    })
+                });
+
+                const data = await response.json();
+                // 응답에서 올바르게 데이터 추출
+                return data.choices[0].message.content; // 'answer' 대신 수정
+            } catch (error) {
+                console.error('Error calling API:', error);
+                return "오류가 발생했습니다. 다시 시도해주세요.";
+            }
+        }
+
+        // 사용자 메시지 전송 함수
+        async function sendMessage() {
+            const inputBox = document.getElementById('user-input');
+            const chatBox = document.getElementById('chat-box');
+            const userMessage = inputBox.value;
+
+            if (userMessage.trim() === '') return;
+
+            // 사용자 메시지를 채팅창에 표시
+            const userBubble = document.createElement('p');
+            userBubble.textContent = userMessage;
+            userBubble.classList.add('user');
+            chatBox.appendChild(userBubble);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Open API 호출 및 응답 표시
+            const apiResponse = await callOpenAPI(userMessage);
+
+            const botBubble = document.createElement('p');
+            botBubble.textContent = apiResponse;
+            chatBox.appendChild(botBubble);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // 입력창 초기화
+            inputBox.value = '';
+        }
+    </script>
+
+</body>
+</html>
+  
